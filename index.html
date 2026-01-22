@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillGap Tracker - Find Missing Skills in Your Resume</title>
+    <meta name="description"
+        content="Identify keyword gaps between job descriptions and your resume with our free SkillGap Tracker tool.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap');
+
+        * {
+            font-family: 'Space Mono', monospace;
+        }
+
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .brutalist-border {
+            border: 5px solid #000;
+        }
+
+        .brutalist-button {
+            border: 4px solid #000;
+            box-shadow: 6px 6px 0px #000;
+            transition: all 0.1s;
+        }
+
+        .brutalist-button:hover {
+            box-shadow: 3px 3px 0px #000;
+            transform: translate(3px, 3px);
+        }
+
+        .brutalist-button:active {
+            box-shadow: 0px 0px 0px #000;
+            transform: translate(6px, 6px);
+        }
+
+        .brutalist-card {
+            border: 5px solid #000;
+            box-shadow: 10px 10px 0px #000;
+        }
+
+        .skill-badge {
+            border: 3px solid #000;
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            background-color: #fff;
+            font-weight: bold;
+        }
+
+        textarea {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .score-excellent {
+            color: #16a34a;
+        }
+
+        .score-good {
+            color: #eab308;
+        }
+
+        .score-poor {
+            color: #dc2626;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 uppercase tracking-tight">SkillGap Tracker</h1>
+            <p class="text-lg md:text-xl">Find Missing Keywords Between Job Descriptions & Your Resume</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Job Description -->
+            <div>
+                <label for="jobDescription" class="block text-xl font-bold mb-3 uppercase">Job Description</label>
+                <textarea id="jobDescription"
+                    class="w-full h-64 p-4 brutalist-border resize-none focus:outline-none focus:ring-0"
+                    placeholder="Paste the job description here..."></textarea>
+            </div>
+
+            <!-- Resume -->
+            <div>
+                <label for="resume" class="block text-xl font-bold mb-3 uppercase">Your Resume</label>
+                <textarea id="resume"
+                    class="w-full h-64 p-4 brutalist-border resize-none focus:outline-none focus:ring-0"
+                    placeholder="Paste your resume here..."></textarea>
+            </div>
+        </div>
+
+        <!-- Analyze Button -->
+        <div class="text-center mb-12">
+            <button id="analyzeBtn"
+                class="brutalist-button bg-yellow-400 px-12 py-4 text-2xl font-bold uppercase hover:bg-yellow-300 active:bg-yellow-500">
+                Analyze
+            </button>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden mb-8">
+            <div class="brutalist-card bg-red-100 p-6">
+                <p class="text-xl font-bold text-red-800" id="errorText"></p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <div class="brutalist-card bg-white p-8">
+                <h2 class="text-3xl font-bold mb-6 uppercase">Analysis Results</h2>
+
+                <!-- Match Score -->
+                <div class="mb-8 pb-8 border-b-4 border-black">
+                    <h3 class="text-xl font-bold mb-3 uppercase">Match Score</h3>
+                    <p class="text-6xl font-bold" id="matchScore">0%</p>
+                    <p class="text-lg mt-2" id="matchDescription"></p>
+                </div>
+
+                <!-- Gap Analysis -->
+                <div class="mb-8 pb-8 border-b-4 border-black">
+                    <h3 class="text-xl font-bold mb-4 uppercase">Missing Skills</h3>
+                    <div id="missingSkills" class="mb-4"></div>
+
+                    <div class="flex flex-wrap gap-4 mt-6 text-sm">
+                        <button id="btnTotalJD"
+                            class="brutalist-button bg-gray-200 px-4 py-2 font-bold hover:bg-gray-300 focus:outline-none">
+                            Total Keywords in JD: <span id="totalJDKeywords">0</span> ▼
+                        </button>
+                        <button id="btnMatched"
+                            class="brutalist-button bg-green-100 px-4 py-2 font-bold hover:bg-green-200 focus:outline-none">
+                            Matched: <span id="matchedKeywords">0</span> ▼
+                        </button>
+                        <div class="px-4 py-2 font-bold border-4 border-black inline-block bg-white">
+                            Missing: <span id="missingKeywordsCount">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Lists -->
+                    <div id="jdKeywordsList" class="hidden mt-4 p-4 border-4 border-black bg-gray-50 transition-all">
+                        <h4 class="font-bold mb-2 uppercase border-b-2 border-black pb-1">Keywords found in Job
+                            Description:</h4>
+                        <div id="jdKeywordsContainer" class="flex flex-wrap"></div>
+                    </div>
+
+                    <div id="matchedKeywordsList"
+                        class="hidden mt-4 p-4 border-4 border-black bg-green-50 transition-all">
+                        <h4 class="font-bold mb-2 uppercase border-b-2 border-black pb-1">Keywords present in your
+                            Resume:</h4>
+                        <div id="matchedKeywordsContainer" class="flex flex-wrap"></div>
+                    </div>
+                </div>
+
+                <!-- Actionable Tip -->
+                <div>
+                    <h3 class="text-xl font-bold mb-3 uppercase">Actionable Tip</h3>
+                    <p class="text-lg bg-yellow-100 p-4 brutalist-border" id="actionableTip"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Industry Keywords Array (200+ keywords)
+        const INDUSTRY_KEYWORDS = [
+            // Programming Languages
+            'python', 'javascript', 'java', 'c++', 'c#', 'ruby', 'php', 'swift',
+            'kotlin', 'go', 'rust', 'typescript', 'sql', 'r', 'matlab', 'scala',
+
+            // Frameworks & Libraries
+            'react', 'angular', 'vue', 'node.js', 'nodejs', 'django', 'flask',
+            'spring', '.net', 'laravel', 'express', 'next.js', 'fastapi', 'svelte',
+
+            // Cloud & DevOps
+            'aws', 'azure', 'gcp', 'google cloud', 'docker', 'kubernetes', 'ci/cd',
+            'jenkins', 'git', 'github', 'gitlab', 'terraform', 'ansible', 'circleci',
+
+            // Databases
+            'nosql', 'mongodb', 'postgresql', 'mysql', 'redis', 'cassandra',
+            'dynamodb', 'elasticsearch', 'oracle', 'sqlite',
+
+            // Data & Analytics
+            'tableau', 'power bi', 'excel', 'pandas', 'numpy', 'spark',
+            'hadoop', 'kafka', 'airflow', 'scikit-learn', 'tensorflow', 'pytorch',
+
+            // Design & Tools
+            'figma', 'adobe xd', 'sketch', 'photoshop', 'illustrator', 'invision',
+            'canva', 'wireframing', 'prototyping',
+
+            // Web & API
+            'api', 'rest', 'restful', 'graphql', 'html', 'css', 'sass', 'webpack',
+            'babel', 'responsive design',
+
+            // Other Core Technical
+            'machine learning', 'artificial intelligence', 'ai', 'ml', 'blockchain',
+            'testing', 'microservices', 'automation', 'performance optimization',
+            'debugging', 'version control', 'unix', 'linux', 'bash',
+
+            // === HIGH-IMPACT ACTION VERBS ===
+            // Leadership Action Verbs
+            'orchestrated', 'spearheaded', 'mentored', 'delegated', 'cultivated',
+            'championed', 'supervised',
+
+            // Execution Action Verbs
+            'accelerated', 'implemented', 'streamlined', 'finalized', 'executed',
+            'dispatched', 'fulfilled',
+
+            // Innovation Action Verbs
+            'conceptualized', 'revitalized', 'redesigned', 'pioneered', 'modernized',
+            'formulated',
+
+            // Communication Action Verbs
+            'negotiated', 'presented', 'advocated', 'collaborated', 'authored',
+            'liaised', 'mediated',
+
+            // Growth Action Verbs
+            'expanded', 'maximized', 'optimized', 'generated', 'scaled', 'surpassed',
+            'outperformed',
+
+            // === TECHNICAL & HARD SKILLS ===
+            // Data & Tech
+            'cloud computing', 'cybersecurity', 'crm', 'erp',
+
+            // Analysis & Business
+            'statistical analysis', 'forecasting', 'budgeting', 'roi tracking',
+            'roi', 'market research', 'data visualization',
+
+            // Project Management
+            'project management', 'agile', 'scrum', 'six sigma', 'lean',
+            'lifecycle management', 'stakeholder management',
+
+            // Operations
+            'supply chain', 'logistics', 'compliance', 'quality assurance', 'qa',
+            'risk management',
+
+            // Sales & Marketing
+            'seo', 'sem', 'seo/sem', 'lead generation', 'revenue growth',
+            'strategic partnerships', 'b2b', 'b2c', 'content strategy',
+
+            // === TRANSFERABLE SOFT SKILLS ===
+            // Problem Solving
+            'critical thinking', 'analytical reasoning', 'troubleshooting',
+            'adaptability', 'conflict resolution',
+
+            // Teamwork
+            'cross-functional collaboration', 'emotional intelligence',
+            'relationship building', 'diversity & inclusion', 'diversity', 'inclusion',
+
+            // Mindset
+            'detail-oriented', 'growth mindset', 'time management', 'self-motivated',
+            'goal-oriented',
+
+            // Communication Skills
+            'public speaking', 'technical writing', 'active listening', 'persuasion',
+            'presentation skills', 'communication', 'leadership', 'teamwork',
+            'collaboration', 'mentoring', 'planning', 'security',
+
+            // === CERTIFICATIONS & EDUCATION ===
+            'pmp', 'project management professional', 'mba', 'master of business administration',
+            'cpa', 'certified public accountant', 'aws certified', 'bilingual',
+            'six sigma black belt', 'cfa', 'chartered financial analyst'
+        ];
+
+        // Get DOM elements
+        const jobDescriptionEl = document.getElementById('jobDescription');
+        const resumeEl = document.getElementById('resume');
+        const analyzeBtnEl = document.getElementById('analyzeBtn');
+        const resultsSectionEl = document.getElementById('resultsSection');
+        const errorMessageEl = document.getElementById('errorMessage');
+        const errorTextEl = document.getElementById('errorText');
+
+        // Result elements
+        const matchScoreEl = document.getElementById('matchScore');
+        const matchDescriptionEl = document.getElementById('matchDescription');
+        const missingSkillsEl = document.getElementById('missingSkills');
+        const actionableTipEl = document.getElementById('actionableTip');
+        const totalJDKeywordsEl = document.getElementById('totalJDKeywords');
+        const matchedKeywordsEl = document.getElementById('matchedKeywords');
+        const missingKeywordsCountEl = document.getElementById('missingKeywordsCount');
+
+        // New interactive elements
+        const btnTotalJD = document.getElementById('btnTotalJD');
+        const btnMatched = document.getElementById('btnMatched');
+        const jdKeywordsList = document.getElementById('jdKeywordsList');
+        const matchedKeywordsList = document.getElementById('matchedKeywordsList');
+        const jdKeywordsContainer = document.getElementById('jdKeywordsContainer');
+        const matchedKeywordsContainer = document.getElementById('matchedKeywordsContainer');
+
+        // Analyze button click handler
+        analyzeBtnEl.addEventListener('click', analyzeSkillGaps);
+
+        // Toggle handlers
+        btnTotalJD.addEventListener('click', () => {
+            jdKeywordsList.classList.toggle('hidden');
+        });
+
+        btnMatched.addEventListener('click', () => {
+            matchedKeywordsList.classList.toggle('hidden');
+        });
+
+        function analyzeSkillGaps() {
+            // Get input values
+            const jobDescription = jobDescriptionEl.value.trim();
+            const resume = resumeEl.value.trim();
+
+            // Hide previous results and errors
+            resultsSectionEl.classList.add('hidden');
+            errorMessageEl.classList.add('hidden');
+
+            // Reset toggles and lists
+            jdKeywordsList.classList.add('hidden');
+            matchedKeywordsList.classList.add('hidden');
+
+            // Validate inputs
+            if (!jobDescription || !resume) {
+                showError('⚠️ Please fill in both the Job Description and Resume fields.');
+                return;
+            }
+
+            // Convert to lowercase for case-insensitive matching
+            const jdLower = jobDescription.toLowerCase();
+            const resumeLower = resume.toLowerCase();
+
+            // Track keywords
+            let jdKeywords = [];
+            let matchedKeywords = [];
+            let missingSkills = [];
+
+            // Process each keyword
+            INDUSTRY_KEYWORDS.forEach(keyword => {
+                const keywordLower = keyword.toLowerCase();
+
+                // Check if keyword is in job description
+                if (jdLower.includes(keywordLower)) {
+                    jdKeywords.push(keyword);
+
+                    // Check if also in resume
+                    if (resumeLower.includes(keywordLower)) {
+                        matchedKeywords.push(keyword);
+                    } else {
+                        missingSkills.push(keyword);
+                    }
+                }
+            });
+
+            // Calculate match score
+            const matchScore = jdKeywords.length > 0
+                ? Math.round((matchedKeywords.length / jdKeywords.length) * 100)
+                : 0;
+
+            // Display results
+            displayResults(matchScore, jdKeywords, matchedKeywords, missingSkills);
+        }
+
+        function displayResults(score, jdKeywordsArr, matchedKeywordsArr, missing) {
+            // Update match score
+            matchScoreEl.textContent = score + '%';
+
+            // Color code the score
+            matchScoreEl.className = 'text-6xl font-bold ';
+            if (score >= 80) {
+                matchScoreEl.classList.add('score-excellent');
+                matchDescriptionEl.textContent = '🎉 Excellent match! Your resume aligns well with this job.';
+            } else if (score >= 50) {
+                matchScoreEl.classList.add('score-good');
+                matchDescriptionEl.textContent = '✓ Good match, but there\'s room for improvement.';
+            } else {
+                matchScoreEl.classList.add('score-poor');
+                matchDescriptionEl.textContent = '⚠ Significant gaps detected. Consider adding more relevant skills.';
+            }
+
+            // Update statistics counts
+            totalJDKeywordsEl.textContent = jdKeywordsArr.length;
+            matchedKeywordsEl.textContent = matchedKeywordsArr.length;
+            missingKeywordsCountEl.textContent = missing.length;
+
+            // Populate JD Keywords List
+            let jdHTML = '';
+            jdKeywordsArr.forEach(skill => {
+                jdHTML += `<span class="skill-badge bg-gray-100">${skill}</span>`;
+            });
+            jdKeywordsContainer.innerHTML = jdHTML || '<p class="text-gray-500 italic">No industry keywords found in the Job Description.</p>';
+
+            // Populate Matched Keywords List
+            let matchedHTML = '';
+            matchedKeywordsArr.forEach(skill => {
+                matchedHTML += `<span class="skill-badge bg-green-100 text-green-800 border-green-800">${skill}</span>`;
+            });
+            matchedKeywordsContainer.innerHTML = matchedHTML || '<p class="text-gray-500 italic">No matching keywords found.</p>';
+
+            // Display missing skills
+            if (missing.length === 0) {
+                missingSkillsEl.innerHTML = '<p class="text-lg font-bold text-green-600">🎊 No gaps found! Your resume covers all the key skills mentioned in the job description.</p>';
+            } else {
+                let skillsHTML = '';
+                missing.forEach(skill => {
+                    skillsHTML += `<span class="skill-badge">${skill}</span>`;
+                });
+                missingSkillsEl.innerHTML = skillsHTML;
+            }
+
+            // Generate actionable tip
+            if (missing.length === 0) {
+                actionableTipEl.textContent = 'Excellent! Your resume covers all the key skills mentioned in the job description. Make sure to highlight these skills in your application and prepare examples of how you\'ve used them.';
+            } else {
+                const topMissing = missing.slice(0, 3);
+                const skillsList = topMissing.join(', ');
+                actionableTipEl.textContent = `To improve this match, consider adding ${skillsList} to your experience section. Highlight specific projects or achievements where you've used these skills, even if they weren't your primary focus.`;
+            }
+
+            // Show results section
+            resultsSectionEl.classList.remove('hidden');
+
+            // Scroll to results
+            resultsSectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showError(message) {
+            errorTextEl.textContent = message;
+            errorMessageEl.classList.remove('hidden');
+            errorMessageEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+
+</html>
