@@ -294,6 +294,17 @@
         const jdKeywordsContainer = document.getElementById('jdKeywordsContainer');
         const matchedKeywordsContainer = document.getElementById('matchedKeywordsContainer');
 
+        // Load saved resume from Local Storage on startup
+        const savedResume = localStorage.getItem('skillgap_resume');
+        if (savedResume) {
+            resumeEl.value = savedResume;
+        }
+
+        // Save resume to Local Storage on input
+        resumeEl.addEventListener('input', () => {
+            localStorage.setItem('skillgap_resume', resumeEl.value);
+        });
+
         // Analyze button click handler
         analyzeBtnEl.addEventListener('click', analyzeSkillGaps);
 
